@@ -47,13 +47,19 @@ class AppTextStyle {
     height: 0,
   );
   static TextStyle font11 = GoogleFonts.poppins(
-    color: const Color(0xFF536471),
+    color: AppThemes.secondaryColor,
     fontSize: 11,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
   );
   static TextStyle font12 = GoogleFonts.poppins(
-    color: const Color(0xFF536471),
+    color: AppThemes.secondaryColor,
     fontSize: 12,
+    fontWeight: FontWeight.w400,
+  );
+
+  static TextStyle font13 = GoogleFonts.poppins(
+    color: AppThemes.secondaryColor,
+    fontSize: 13,
     fontWeight: FontWeight.w400,
   );
 
@@ -70,7 +76,7 @@ class AppTextStyle {
     fontWeight: FontWeight.w500,
   );
 
-  static TextStyle font40Secondary = GoogleFonts.inter(
+  static TextStyle font40Secondary = GoogleFonts.manrope(
     fontSize: 40,
     color: AppThemes.secondaryColor,
     fontWeight: FontWeight.w700,
@@ -110,8 +116,7 @@ class AppTextStyle {
     fontSize: 18,
   );
 
-  static TextStyle font20Black = GoogleFonts.inter(
-    fontSize: 20,
-    fontWeight: FontWeight.w600,
+  static TextStyle font20Black = GoogleFonts.manrope(
+    fontSize: 25,
   );
 }
