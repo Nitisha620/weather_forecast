@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'app_text_style.dart';
 
 class AppThemes {
-  static const Color primaryColor = Color.fromRGBO(13, 68, 147, 1);
-  static const Color secondaryColor = Color.fromRGBO(31, 96, 192, 1);
+  static const Color primaryColor = Color(0xFF008d97);
+  static const Color midToneBlend = Color(0xFF4cb3bb);
+  static const Color secondaryColor = Color(0xFFdfe9ed);
   static const Color greyColor = Color(0xFF585858);
   static const Color lightGreyColor = Color(0xFFADACAC);
   static const Color blureGreyColor = Color.fromRGBO(248, 250, 252, 1);
