@@ -1,86 +1,142 @@
 import 'package:weather_forcast/models/current_weather.dart';
 
 class WeatherForecast {
-  String? cod;
-  int? message;
-  int? cnt;
-  List<CurrentWeather>? list;
-  City? city;
+  final String cod;
+  final int message;
+  final int cnt;
+  final List<CurrentWeather> list;
+  final City city;
 
-  WeatherForecast({this.cod, this.message, this.cnt, this.list, this.city});
+  WeatherForecast({
+    required this.cod,
+    required this.message,
+    required this.cnt,
+    required this.list,
+    required this.city,
+  });
 
-  WeatherForecast.fromJson(Map<String, dynamic> json) {
-    cod = json['cod'];
-    message = json['message'];
-    cnt = json['cnt'];
-    if (json['list'] != null) {
-      list = <CurrentWeather>[];
-      json['list'].forEach((v) {
-        list!.add(CurrentWeather.fromJson(v));
-      });
-    }
-    city = json['city'] != null ? City.fromJson(json['city']) : null;
+  /// Factory constructor for defaults
+  factory WeatherForecast.empty() {
+    return WeatherForecast(
+      cod: "--",
+      message: 0,
+      cnt: 0,
+      list: [],
+      city: City.empty(),
+    );
+  }
+
+  factory WeatherForecast.fromJson(Map<String, dynamic> json) {
+    return WeatherForecast(
+      cod: json['cod'] ?? "--",
+      message: json['message'] ?? 0,
+      cnt: json['cnt'] ?? 0,
+      list: (json['list'] as List<dynamic>?)
+              ?.map((v) => CurrentWeather.fromJson(v))
+              .toList() ??
+          [],
+      city: json['city'] != null ? City.fromJson(json['city']) : City.empty(),
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['cod'] = cod;
-    data['message'] = message;
-    data['cnt'] = cnt;
-    if (list != null) {
-      data['list'] = list!.map((v) => v.toJson()).toList();
-    }
-    if (city != null) {
-      data['city'] = city!.toJson();
-    }
-    return data;
+    return {
+      'cod': cod,
+      'message': message,
+      'cnt': cnt,
+      'list': list.map((v) => v.toJson()).toList(),
+      'city': city.toJson(),
+    };
   }
 }
 
 class City {
-  int? id;
-  String? name;
-  Coord? coord;
-  String? country;
-  int? population;
-  int? timezone;
-  int? sunrise;
-  int? sunset;
+  final int id;
+  final String name;
+  final Coord coord;
+  final String country;
+  final int population;
+  final int timezone;
+  final int sunrise;
+  final int sunset;
 
   City({
-    this.id,
-    this.name,
-    this.coord,
-    this.country,
-    this.population,
-    this.timezone,
-    this.sunrise,
-    this.sunset,
+    required this.id,
+    required this.name,
+    required this.coord,
+    required this.country,
+    required this.population,
+    required this.timezone,
+    required this.sunrise,
+    required this.sunset,
   });
 
-  City.fromJson(Map<String, dynamic> json) {
-    id = json['id'];
-    name = json['name'];
-    coord = json['coord'] != null ? new Coord.fromJson(json['coord']) : null;
-    country = json['country'];
-    population = json['population'];
-    timezone = json['timezone'];
-    sunrise = json['sunrise'];
-    sunset = json['sunset'];
+  /// Defaults
+  factory City.empty() {
+    return City(
+      id: 0,
+      name: "--",
+      coord: Coord.empty(),
+      country: "--",
+      population: 0,
+      timezone: 0,
+      sunrise: 0,
+      sunset: 0,
+    );
+  }
+
+  factory City.fromJson(Map<String, dynamic> json) {
+    return City(
+      id: json['id'] ?? 0,
+      name: json['name'] ?? "--",
+      coord: json['coord'] != null ? Coord.fromJson(json['coord']) : Coord.empty(),
+      country: json['country'] ?? "--",
+      population: json['population'] ?? 0,
+      timezone: json['timezone'] ?? 0,
+      sunrise: json['sunrise'] ?? 0,
+      sunset: json['sunset'] ?? 0,
+    );
   }
 
   Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = <String, dynamic>{};
-    data['id'] = id;
-    data['name'] = name;
-    if (coord != null) {
-      data['coord'] = coord!.toJson();
-    }
-    data['country'] = country;
-    data['population'] = population;
-    data['timezone'] = timezone;
-    data['sunrise'] = sunrise;
-    data['sunset'] = sunset;
-    return data;
+    return {
+      'id': id,
+      'name': name,
+      'coord': coord.toJson(),
+      'country': country,
+      'population': population,
+      'timezone': timezone,
+      'sunrise': sunrise,
+      'sunset': sunset,
+    };
+  }
+}
+
+class Coord {
+  final double lat;
+  final double lon;
+
+  Coord({
+    required this.lat,
+    required this.lon,
+  });
+
+  /// Defaults
+  factory Coord.empty() {
+    return Coord(lat: 0.0, lon: 0.0);
+  }
+
+  factory Coord.fromJson(Map<String, dynamic> json) {
+    return Coord(
+      lat: (json['lat'] ?? 0).toDouble(),
+      lon: (json['lon'] ?? 0).toDouble(),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'lat': lat,
+      'lon': lon,
+    };
   }
 }
