@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:weather_forcast/bloc/weather_bloc.dart';
 
 import 'presentation/home_page.dart';
 import 'styles/app_theme.dart';
 
 void main() async {
-  await dotenv.load(fileName: ".env");
-  runApp(const MyApp());
+  WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "assets/.env");
+  runApp(
+    BlocProvider(create: (context) => WeatherBloc(), child: const MyApp()),
+  );
 }
 
 class MyApp extends StatelessWidget {
