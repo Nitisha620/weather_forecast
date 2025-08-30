@@ -15,11 +15,11 @@ class WeatherRepository {
   lon: Longitude
   appid: unique API key 
   */
-  Future<CurrentWeather> fetchCurrentWeatherData(String lat, String lon) async {
+  Future<CurrentWeather> fetchCurrentWeatherData(double lat, double lon) async {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey',
+          'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric',
         ),
       );
       debugConsolePrint(response);
@@ -41,11 +41,11 @@ class WeatherRepository {
     }
   }
 
-  Future<WeatherForecast> fetchWeatherForecast(String lat, String lon) async {
+  Future<WeatherForecast> fetchWeatherForecast(double lat, double lon) async {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric',
+          'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric&cnt=5',
         ),
       );
       debugConsolePrint(response);
