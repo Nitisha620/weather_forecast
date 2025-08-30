@@ -63,6 +63,12 @@ class AppTextStyle {
     fontWeight: FontWeight.w400,
   );
 
+  static TextStyle font12Grey = GoogleFonts.poppins(
+    color: AppThemes.greyColor,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
+  );
+
   static TextStyle font14 = GoogleFonts.poppins(
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -116,7 +122,5 @@ class AppTextStyle {
     fontSize: 18,
   );
 
-  static TextStyle font20Black = GoogleFonts.manrope(
-    fontSize: 25,
-  );
+  static TextStyle font20Black = GoogleFonts.manrope(fontSize: 25);
 }
