@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:weather_forcast/models/current_weather.dart';
+import 'package:weather_forcast/models/location.dart';
 import 'package:weather_forcast/models/weather_forecast.dart';
 
 class WeatherRepository {
@@ -15,6 +16,33 @@ class WeatherRepository {
   lon: Longitude
   appid: unique API key 
   */
+
+  Future<Location> fetchCoordinatesByLocationName(String cityName) async {
+    try {
+      final response = await http.get(
+        Uri.parse(
+          'http://api.openweathermap.org/geo/1.0/direct?q=$cityName&limit=1&appid=$apiKey',
+        ),
+      );
+      debugConsolePrint(response);
+      if (response.statusCode == 200) {
+        final responseBody = json.decode(response.body);
+        return LocationList.fromJson(responseBody).list.first;
+      } else {
+        debugPrint(
+          "No Response while fetching city coordinates forecast in fetchCoordinatesByLocationName",
+        );
+        throw Exception(
+          'Failed to fetch city coordinates in fetchCoordinatesByLocationName',
+        );
+      }
+    } catch (e) {
+      throw Exception(
+        'Failed to fetch city coordinates in fetchCoordinatesByLocationName: $e',
+      );
+    }
+  }
+
   Future<CurrentWeather> fetchCurrentWeatherData(double lat, double lon) async {
     try {
       final response = await http.get(
@@ -45,7 +73,7 @@ class WeatherRepository {
     try {
       final response = await http.get(
         Uri.parse(
-          'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric&cnt=5',
+          'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric',
         ),
       );
       debugConsolePrint(response);
