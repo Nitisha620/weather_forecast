@@ -3,9 +3,12 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:string_extensions/string_extensions.dart';
 import 'package:weather_forcast/bloc/weather_bloc.dart';
 import 'package:weather_forcast/models/current_weather.dart';
+import 'package:weather_forcast/presentation/map_page.dart';
 import 'package:weather_forcast/styles/app_text_style.dart';
 import 'package:weather_forcast/styles/app_theme.dart';
+import 'package:weather_forcast/widgets/flutter_toast.dart';
 import 'package:weather_forcast/widgets/line_chart.dart';
+import 'package:weather_forcast/widgets/loader.dart';
 
 import '../widgets/search.dart';
 
@@ -17,6 +20,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  String enteredCityName = "";
   WeatherBloc get weatherBloc => context.read<WeatherBloc>();
 
   @override
@@ -27,164 +31,214 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    Size size = MediaQuery.of(context).size;
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              AppThemes.primaryColor,
-              AppThemes.midToneBlend,
-              AppThemes.secondaryColor,
-            ],
-            stops: [0.0, 0.5, 1.0],
+    return BlocListener<WeatherBloc, WeatherState>(
+      listener: (context, state) {
+        if (state is Error) {
+          cancelToast();
+          showToast(state.message);
+        }
+      },
+      child: Scaffold(
+        body: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                AppThemes.primaryColor,
+                AppThemes.midToneBlend,
+                AppThemes.secondaryColor,
+              ],
+              stops: [0.0, 0.5, 1.0],
+            ),
+          ),
+          child: BlocBuilder<WeatherBloc, WeatherState>(
+            builder: (context, state) {
+              final weatherInfo = state is Loaded
+                  ? state.currentWeather
+                  : CurrentWeather.empty();
+              final List<Map<String, dynamic>> forecasetInfo = state is Loaded
+                  ? state.weatherForecast
+                  : [];
+
+              return state is Initial || state is Loading
+                  ? SizedBox.expand(child: ShimmerLoader())
+                  : weatherInfoWidget(weatherInfo, forecasetInfo);
+            },
           ),
         ),
-        child: BlocBuilder<WeatherBloc, WeatherState>(
-          builder: (context, state) {
-            final weatherInfo = state is Loaded
-                ? state.currentWeather
-                : CurrentWeather.empty();
+      ),
+    );
+  }
 
-            return state is Initial || state is Loading
-                ? SizedBox.expand(
-                    child: Center(child: CircularProgressIndicator()),
-                  )
-                : SingleChildScrollView(
-                    padding: EdgeInsets.fromLTRB(
-                      12,
-                      size.height * 0.07,
-                      12,
-                      20,
+  weatherInfoWidget(
+    CurrentWeather weatherInfo,
+    List<Map<String, dynamic>> forecasetInfo,
+  ) {
+    Size size = MediaQuery.of(context).size;
+    return RefreshIndicator(
+      onRefresh: () async {
+        weatherBloc.add(FetchCurrentLocation(cityName: enteredCityName));
+      },
+      child: SizedBox.expand(
+        child: SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: EdgeInsets.fromLTRB(12, size.height * 0.07, 12, 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on_outlined,
+                        color: AppThemes.secondaryColor,
+                      ),
+                      SizedBox(width: 5),
+                      Text(
+                        enteredCityName.isEmpty
+                            ? weatherInfo.name
+                            : enteredCityName,
+                        style: AppTextStyle.font20Black.copyWith(
+                          fontWeight: FontWeight.w500,
+                          color: AppThemes.secondaryColor,
+                        ),
+                      ),
+                    ],
+                  ),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              WeatherMap(currentWeather: weatherInfo),
+                        ),
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Icon(
+                        Icons.map_outlined,
+                        color: AppThemes.secondaryColor,
+                        size: 25,
+                      ),
                     ),
-                    child: Column(
+                  ),
+                ],
+              ),
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 10),
+                child: Search(
+                  onSubmitted: (text) {
+                    enteredCityName = text;
+                    weatherBloc.add(FetchCurrentLocation(cityName: text));
+                  },
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.fromLTRB(8, 0, 8, 30),
+                child: Row(
+                  children: [
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_on_outlined,
-                              color: AppThemes.secondaryColor,
-                            ),
-                            SizedBox(width: 5),
-                            Text(
-                              weatherInfo.name,
-                              style: AppTextStyle.font20Black.copyWith(
-                                fontWeight: FontWeight.w500,
-                                color: AppThemes.secondaryColor,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Container(
-                          margin: EdgeInsets.symmetric(vertical: 10),
-                          child: Search(),
-                        ),
-                        Container(
-                          margin: EdgeInsets.fromLTRB(8, 0, 8, 30),
-                          child: Row(
-                            children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "${weatherInfo.main.temp}\u2103",
-                                    style: AppTextStyle.font40Secondary
-                                        .copyWith(
-                                          fontSize: 70,
-                                          color: AppThemes.secondaryColor,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                  ),
-                                  Text(
-                                    "${weatherInfo.weather.first.description.toTitleCase} ${weatherInfo.main.tempMin}\u2103 /  ${weatherInfo.main.tempMax}\u2103",
-                                    style: AppTextStyle.font18.copyWith(
-                                      fontSize: 16,
-                                      color: AppThemes.secondaryColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+                        Text(
+                          "${weatherInfo.main.temp}\u2103",
+                          style: AppTextStyle.font40Secondary.copyWith(
+                            fontSize: 70,
+                            color: AppThemes.secondaryColor,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
-                        Container(
-                          margin: EdgeInsets.symmetric(
-                            horizontal: 0,
-                            vertical: 12,
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                child: Wrap(
-                                  alignment: WrapAlignment.center,
-                                  crossAxisAlignment: WrapCrossAlignment.center,
-                                  spacing: 12.0,
-                                  runSpacing: 10,
-                                  children: [
-                                    weatherElementsInfo(
-                                      Icons.thermostat,
-                                      "Feels like",
-                                      "${weatherInfo.main.feelsLike} ",
-                                      unit: "\u2103",
-                                    ),
-                                    weatherElementsInfo(
-                                      Icons.water_drop,
-                                      "Humidity",
-                                      "${weatherInfo.main.humidity}",
-                                      unit: " %",
-                                    ),
-                                    weatherElementsInfo(
-                                      Icons.cloud,
-                                      "Cloud cover",
-                                      "${weatherInfo.clouds.all}",
-                                      unit: " %",
-                                    ),
-                                    weatherElementsInfo(
-                                      Icons.speed,
-                                      "Air Pressure",
-                                      "${weatherInfo.main.pressure}",
-                                      unit: " hPa",
-                                    ),
-                                    weatherElementsInfo(
-                                      Icons.air,
-                                      "Wind speed",
-                                      "${weatherInfo.wind.speed}",
-                                      unit: " m/s",
-                                    ),
-
-                                    weatherElementsInfo(
-                                      Icons.explore,
-                                      "Wind direction",
-                                      "${weatherInfo.wind.deg}",
-                                      unit:
-                                          " \u00B0${getWindDirection(weatherInfo.wind.deg)}",
-                                    ),
-                                  ],
+                        weatherInfo.weather.isNotEmpty
+                            ? Text(
+                                "${weatherInfo.weather.first.description.toTitleCase} ${weatherInfo.main.tempMin}\u2103 /  ${weatherInfo.main.tempMax}\u2103",
+                                style: AppTextStyle.font18.copyWith(
+                                  fontSize: 16,
+                                  color: AppThemes.secondaryColor,
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          margin: EdgeInsets.symmetric(horizontal: 5),
-                          width: size.width,
-                          height: size.height * 0.35,
-                          padding: EdgeInsets.fromLTRB(15, 10, 30, 10),
-                          decoration: BoxDecoration(
-                            color: AppThemes.primaryColor.withAlpha(100),
-                            borderRadius: BorderRadius.circular(15),
-                          ),
-                          child: TempChart(),
-                        ),
+                              )
+                            : SizedBox(),
                       ],
                     ),
-                  );
-          },
+                  ],
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Wrap(
+                        alignment: WrapAlignment.center,
+                        crossAxisAlignment: WrapCrossAlignment.center,
+                        spacing: 12.0,
+                        runSpacing: 10,
+                        children: [
+                          weatherElementsInfo(
+                            Icons.thermostat,
+                            "Feels like",
+                            "${weatherInfo.main.feelsLike} ",
+                            unit: "\u2103",
+                          ),
+                          weatherElementsInfo(
+                            Icons.water_drop,
+                            "Humidity",
+                            "${weatherInfo.main.humidity}",
+                            unit: " %",
+                          ),
+                          weatherElementsInfo(
+                            Icons.cloud,
+                            "Cloud cover",
+                            "${weatherInfo.clouds.all}",
+                            unit: " %",
+                          ),
+                          weatherElementsInfo(
+                            Icons.speed,
+                            "Air Pressure",
+                            "${weatherInfo.main.pressure}",
+                            unit: " hPa",
+                          ),
+                          weatherElementsInfo(
+                            Icons.air,
+                            "Wind speed",
+                            "${weatherInfo.wind.speed}",
+                            unit: " m/s",
+                          ),
+
+                          weatherElementsInfo(
+                            Icons.explore,
+                            "Wind direction",
+                            "${weatherInfo.wind.deg}",
+                            unit:
+                                " \u00B0${getWindDirection(weatherInfo.wind.deg)}",
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                margin: EdgeInsets.symmetric(horizontal: 5),
+                width: size.width,
+                height: size.height * 0.35,
+                padding: EdgeInsets.fromLTRB(15, 10, 30, 10),
+                decoration: BoxDecoration(
+                  color: AppThemes.primaryColor.withAlpha(100),
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: forecasetInfo.isNotEmpty
+                    ? TempChart(forecasetInfo: forecasetInfo)
+                    : SizedBox.expand(),
+              ),
+            ],
+          ),
         ),
       ),
     );
