@@ -1,103 +1,59 @@
 import 'dart:convert';
 
-import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'package:weather_forcast/models/current_weather.dart';
 import 'package:weather_forcast/models/location.dart';
 import 'package:weather_forcast/models/weather_forecast.dart';
+import 'package:weather_forcast/service/url_enpoints.dart';
 
 class WeatherRepository {
   final apiKey = dotenv.env['OPENWEATHER_API_KEY'];
 
-  /* Params
-  lat: Latitude
-  lon: Longitude
-  appid: unique API key 
-  */
-
   Future<Location> fetchCoordinatesByLocationName(String cityName) async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-          'http://api.openweathermap.org/geo/1.0/direct?q=$cityName&limit=1&appid=$apiKey',
-        ),
-      );
-      debugConsolePrint(response);
-      if (response.statusCode == 200) {
-        final responseBody = json.decode(response.body);
-        return LocationList.fromJson(responseBody).list.first;
-      } else {
-        debugPrint(
-          "No Response while fetching city coordinates forecast in fetchCoordinatesByLocationName",
-        );
-        throw Exception(
-          'Failed to fetch city coordinates in fetchCoordinatesByLocationName',
-        );
-      }
-    } catch (e) {
-      throw Exception(
-        'Failed to fetch city coordinates in fetchCoordinatesByLocationName: $e',
-      );
-    }
+    final response = await _getJson(
+      "${UrlEndPoints.geo}?q=$cityName&limit=1&appid=$apiKey",
+    );
+    return LocationList.fromJson(response).list.first;
   }
 
   Future<CurrentWeather> fetchCurrentWeatherData(double lat, double lon) async {
-    try {
-      final response = await http.get(
-        Uri.parse(
-          'https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=metric',
-        ),
-      );
-      debugConsolePrint(response);
-      if (response.statusCode == 200) {
-        final responseBody = json.decode(response.body);
-        return CurrentWeather.fromJson(responseBody);
-      } else {
-        debugPrint(
-          "No Response while fetching current weather data in fetchCurrentWeatherData",
-        );
-        throw Exception(
-          'Failed to fetch current weather data in fetchCurrentWeatherData',
-        );
-      }
-    } catch (e) {
-      throw Exception(
-        'Failed to fetch current weather data in fetchCurrentWeatherData: $e',
-      );
-    }
+    final response = await _getJson(
+      "${UrlEndPoints.currentWeather}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
+    );
+    return CurrentWeather.fromJson(response);
   }
 
   Future<WeatherForecast> fetchWeatherForecast(double lat, double lon) async {
+    final response = await _getJson(
+      "${UrlEndPoints.forecast}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
+    );
+    return WeatherForecast.fromJson(response);
+  }
+
+  Future<dynamic> _getJson(String url) async {
     try {
-      final response = await http.get(
-        Uri.parse(
-          'https://api.openweathermap.org/data/2.5/forecast?lat=$lat&lon=$lon&appid=$apiKey&units=metric',
-        ),
-      );
-      debugConsolePrint(response);
+      final response = await http.get(Uri.parse(url));
+      debugConsolePrint(response, url);
+
       if (response.statusCode == 200) {
-        final responseBody = json.decode(response.body);
-        return WeatherForecast.fromJson(responseBody);
+        return json.decode(response.body);
       } else {
-        debugPrint(
-          "No Response while fetching weather forecast in fetchWeatherForecast",
-        );
         throw Exception(
-          'Failed to fetch weather forecast in fetchWeatherForecast',
+          "Failed request for $url. Status: ${response.statusCode}",
         );
       }
     } catch (e) {
-      throw Exception(
-        'Failed to fetch weather forecast in fetchWeatherForecast: $e',
-      );
+      throw Exception("Network error: $e");
     }
   }
-}
 
-debugConsolePrint(Response response, {String? payload}) {
-  if (payload != null) debugPrint("apiPayload=========>>>> $payload");
-  debugPrint("statusCode=========>>>> ${response.statusCode}");
-  debugPrint('Response Body: ${response.body}');
+  debugConsolePrint(Response response, String url) {
+    debugPrint("===== API CALL =====");
+    debugPrint("url===============>>>> $url");
+    debugPrint("statusCode=========>>>> ${response.statusCode}");
+    debugPrint('Response Body: ${response.body}');
+  }
 }
