@@ -58,12 +58,15 @@ lib/
 1. Add GOOGLE_MAPS_API_KEY=****** to android\local.properties file
 2. Add OPENWEATHER_API_KEY=********* in assets\.env file
 
-Screenshots :
+## Screenshots :
 <img width="200" height="600" alt="Screenshot_1756720165" src="https://github.com/user-attachments/assets/19c3a530-0d33-41f6-b410-bf0e02f3635f" />
 <img width="200" height="600" alt="image" src="https://github.com/user-attachments/assets/b1f12687-cc38-4998-8fbd-c880d3b166cb" />
 <img width="200" height="600" alt="Screenshot_1756720238" src="https://github.com/user-attachments/assets/d7c99a2b-dba0-43d1-aa8c-3dd02c9d1a5c" />
 <img width="200" height="600" alt="Screenshot_1756720249" src="https://github.com/user-attachments/assets/33c140f7-49fd-42f9-a60b-404f80b9b82e" />
 
+## Demo & APK
 
+- **Video Demo:** [Watch here](https://drive.google.com/file/d/1D4lw7wFwNgUw4HbWhoqiou5xRYiU7ExA/view?usp=sharing)  
+- **APK Download:** [Download APK](https://drive.google.com/file/d/1iBU87rbKD-cH7TrmpbSfZcEsYX-Ud6JT/view?usp=sharing)
 
 
