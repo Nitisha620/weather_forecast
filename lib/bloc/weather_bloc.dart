@@ -1,11 +1,12 @@
 import 'package:bloc/bloc.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:geolocator/geolocator.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:weather_forcast/models/current_weather.dart';
+import 'package:weather_forcast/models/weather_forecast.dart';
 import 'package:weather_forcast/repository/weather_repo.dart';
 import 'package:weather_forcast/service/location_service.dart';
+import 'package:weather_forcast/service/url_enpoints.dart';
 import 'package:weather_forcast/service/url_tile_provider.dart';
 
 part 'weather_event.dart';
@@ -16,7 +17,7 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   final apiKey = dotenv.env['OPENWEATHER_API_KEY'];
 
   WeatherBloc() : super(Initial()) {
-    on<FetchCurrentLocation>(fetchCurrentLocation);
+    on<FetchWeatherData>(fetchWeatherData);
     on<ToggleMapLayer>((event, emit) {
       emit(Loading());
       try {
@@ -26,7 +27,7 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
             256,
             256,
             (x, y, zoom) =>
-                "https://tile.openweathermap.org/map/${event.layer}/$zoom/$x/$y.png?appid=$apiKey",
+                "${UrlEndPoints.weatherMap}${event.layer}/$zoom/$x/$y.png?appid=$apiKey",
           ),
         );
 
@@ -43,79 +44,65 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
     });
   }
 
-  Future<void> fetchCurrentLocation(
-    FetchCurrentLocation event,
+  Future<void> fetchWeatherData(
+    FetchWeatherData event,
     Emitter<WeatherState> emit,
   ) async {
     try {
       emit(Loading());
-      double? lat;
-      double? lon;
-      if (event.cityName?.isEmpty ?? true) {
-        final position = await LocationService.getCurrentLocation();
-        if (position != null) {
-          lat = position.latitude;
-          lon = position.longitude;
-        }
-      } else {
-        final searchedLocation = await weatherRepository
-            .fetchCoordinatesByLocationName(event.cityName!);
-        lat = searchedLocation.lat;
-        lon = searchedLocation.lon;
+
+      final coordinates = await _getCoordinates(event.cityName);
+
+      if (coordinates == null) {
+        emit(Error(message: "Unable to fetch location"));
+        return;
       }
 
-      if (lat != null && lon != null) {
-        final futures = [
-          fetchCurrentWeather(lat, lon),
-          fetchWeatherForecast(lat, lon),
-        ];
+      final (lat, lon) = coordinates;
 
-        final results = await Future.wait(futures);
+      final results = await Future.wait([
+        weatherRepository.fetchCurrentWeatherData(lat, lon),
+        weatherRepository.fetchWeatherForecast(lat, lon),
+      ]);
 
-        final currentWeather = results[0] != null
-            ? results[0] as CurrentWeather
-            : CurrentWeather.empty();
-        final weatherForecast = results[1] != null
-            ? results[1] as List<Map<String, dynamic>>
-            : [] as List<Map<String, dynamic>>;
-        emit(
-          Loaded(
-            currentWeather: currentWeather,
-            weatherForecast: weatherForecast,
-          ),
-        );
-      } else {
-        emit(Error(message: "Error while fetching current location"));
-      }
+      final currentWeather = results[0] as CurrentWeather;
+      final weatherForecast = _processForecast(
+        (results[1] as WeatherForecast).list,
+      );
+      emit(
+        Loaded(
+          currentWeather: currentWeather,
+          weatherForecast: weatherForecast,
+        ),
+      );
     } catch (e) {
-      debugPrint("Error while fetching current location $e");
-      emit(Error(message: e.toString()));
+      emit(
+        Error(
+          message:
+              "Error while fetching weather data, please refresh or try again later",
+        ),
+      );
     }
   }
 
-  Future<CurrentWeather?> fetchCurrentWeather(double lat, double lon) async {
+  Future<(double, double)?> _getCoordinates(String? cityName) async {
     try {
-      return await weatherRepository.fetchCurrentWeatherData(lat, lon);
+      if (cityName?.isEmpty ?? true) {
+        final pos = await LocationService.getCurrentLocation();
+        if (pos != null) return (pos.latitude, pos.longitude);
+      } else {
+        final loc = await weatherRepository.fetchCoordinatesByLocationName(
+          cityName!,
+        );
+        return (loc.lat, loc.lon);
+      }
     } catch (e) {
-      debugPrint("Error while fetching current weather $e");
+      debugPrint("Error resolving coordinates: $e");
     }
     return null;
   }
 
-  Future<List<Map<String, dynamic>>> fetchWeatherForecast(
-    double lat,
-    double lon,
-  ) async {
-    try {
-      final forecast = await weatherRepository.fetchWeatherForecast(lat, lon);
-      return processForecast(forecast.list);
-    } catch (e) {
-      debugPrint("Error while fetching weather forecast $e");
-    }
-    return [];
-  }
-
-  List<Map<String, dynamic>> processForecast(
+  List<Map<String, dynamic>> _processForecast(
     List<CurrentWeather> forecastList,
   ) {
     Map<String, List<CurrentWeather>> grouped = {};
@@ -145,7 +132,6 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
 
       result.add({"date": date, "min": minTemp, "max": maxTemp, "icon": icon});
     });
-
     return result.take(5).toList();
   }
 }
