@@ -6,13 +6,13 @@ class LocationService {
     bool serviceEnabled;
     LocationPermission permission;
 
-    // Check if location services are enabled
+    // Checking if location services are enabled
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       throw Exception("Location services are disabled");
     }
 
-    // Check permission
+    // Check permission and request permission if not enabled
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
@@ -27,7 +27,7 @@ class LocationService {
       );
     }
 
-    // ✅ Get current position
+    // Get current position
     return await Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
     );
