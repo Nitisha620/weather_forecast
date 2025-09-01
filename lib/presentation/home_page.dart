@@ -7,7 +7,7 @@ import 'package:weather_forcast/presentation/map_page.dart';
 import 'package:weather_forcast/styles/app_text_style.dart';
 import 'package:weather_forcast/styles/app_theme.dart';
 import 'package:weather_forcast/widgets/flutter_toast.dart';
-import 'package:weather_forcast/widgets/line_chart.dart';
+import 'package:weather_forcast/presentation/temp_chart.dart';
 import 'package:weather_forcast/widgets/loader.dart';
 
 import '../widgets/search.dart';
@@ -26,16 +26,16 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    weatherBloc.add(FetchCurrentLocation());
+    weatherBloc.add(FetchWeatherData());
   }
 
   @override
   Widget build(BuildContext context) {
     return BlocListener<WeatherBloc, WeatherState>(
       listener: (context, state) {
-        if (state is Error) {
+        if (state.errorMessage?.isNotEmpty ?? false) {
           cancelToast();
-          showToast(state.message);
+          showToast(state.errorMessage!);
         }
       },
       child: Scaffold(
@@ -54,14 +54,12 @@ class _HomePageState extends State<HomePage> {
           ),
           child: BlocBuilder<WeatherBloc, WeatherState>(
             builder: (context, state) {
-              final weatherInfo = state is Loaded
-                  ? state.currentWeather
-                  : CurrentWeather.empty();
-              final List<Map<String, dynamic>> forecasetInfo = state is Loaded
-                  ? state.weatherForecast
-                  : [];
+              final weatherInfo =
+                  state.currentWeather ?? CurrentWeather.empty();
+              final List<Map<String, dynamic>> forecasetInfo =
+                  state.weatherForecast;
 
-              return state is Initial || state is Loading
+              return state.isLoading
                   ? SizedBox.expand(child: ShimmerLoader())
                   : weatherInfoWidget(weatherInfo, forecasetInfo);
             },
@@ -78,7 +76,7 @@ class _HomePageState extends State<HomePage> {
     Size size = MediaQuery.of(context).size;
     return RefreshIndicator(
       onRefresh: () async {
-        weatherBloc.add(FetchCurrentLocation(cityName: enteredCityName));
+        weatherBloc.add(FetchWeatherData(cityName: enteredCityName));
       },
       child: SizedBox.expand(
         child: SingleChildScrollView(
@@ -101,10 +99,7 @@ class _HomePageState extends State<HomePage> {
                         enteredCityName.isEmpty
                             ? weatherInfo.name
                             : enteredCityName,
-                        style: AppTextStyle.font20Black.copyWith(
-                          fontWeight: FontWeight.w500,
-                          color: AppThemes.secondaryColor,
-                        ),
+                        style: AppTextStyle.font25,
                       ),
                     ],
                   ),
@@ -114,7 +109,7 @@ class _HomePageState extends State<HomePage> {
                         context,
                         MaterialPageRoute(
                           builder: (context) =>
-                              WeatherMap(currentWeather: weatherInfo),
+                              MapPage(currentWeather: weatherInfo),
                         ),
                       );
                     },
@@ -134,7 +129,7 @@ class _HomePageState extends State<HomePage> {
                 child: Search(
                   onSubmitted: (text) {
                     enteredCityName = text;
-                    weatherBloc.add(FetchCurrentLocation(cityName: text));
+                    weatherBloc.add(FetchWeatherData(cityName: text));
                   },
                 ),
               ),
@@ -147,7 +142,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Text(
                           "${weatherInfo.main.temp}\u2103",
-                          style: AppTextStyle.font40Secondary.copyWith(
+                          style: AppTextStyle.largeText.copyWith(
                             fontSize: 70,
                             color: AppThemes.secondaryColor,
                             fontWeight: FontWeight.w500,
@@ -156,10 +151,7 @@ class _HomePageState extends State<HomePage> {
                         weatherInfo.weather.isNotEmpty
                             ? Text(
                                 "${weatherInfo.weather.first.description.toTitleCase} ${weatherInfo.main.tempMin}\u2103 /  ${weatherInfo.main.tempMax}\u2103",
-                                style: AppTextStyle.font18.copyWith(
-                                  fontSize: 16,
-                                  color: AppThemes.secondaryColor,
-                                ),
+                                style: AppTextStyle.font16,
                               )
                             : SizedBox(),
                       ],
@@ -168,7 +160,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Container(
-                margin: EdgeInsets.symmetric(horizontal: 0, vertical: 12),
+                margin: EdgeInsets.symmetric(vertical: 12),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -269,22 +261,13 @@ class _HomePageState extends State<HomePage> {
               Text(
                 label,
                 textAlign: TextAlign.center,
-                style: AppTextStyle.font14.copyWith(
-                  fontWeight: FontWeight.normal,
-                  color: AppThemes.secondaryColor,
-                ),
+                style: AppTextStyle.font14,
                 overflow: TextOverflow.ellipsis,
               ),
               Text.rich(
                 TextSpan(
                   children: [
-                    TextSpan(
-                      text: value,
-                      style: AppTextStyle.font18Grey.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppThemes.secondaryColor,
-                      ),
-                    ),
+                    TextSpan(text: value, style: AppTextStyle.font14),
                     TextSpan(
                       text: unit ?? "",
                       style: AppTextStyle.font12.copyWith(

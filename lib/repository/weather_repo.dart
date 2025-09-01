@@ -20,17 +20,25 @@ class WeatherRepository {
   }
 
   Future<CurrentWeather> fetchCurrentWeatherData(double lat, double lon) async {
-    final response = await _getJson(
-      "${UrlEndPoints.currentWeather}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
-    );
-    return CurrentWeather.fromJson(response);
+    try {
+      final response = await _getJson(
+        "${UrlEndPoints.currentWeather}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
+      );
+      return CurrentWeather.fromJson(response);
+    } catch (e) {
+      return CurrentWeather.empty();
+    }
   }
 
   Future<WeatherForecast> fetchWeatherForecast(double lat, double lon) async {
-    final response = await _getJson(
-      "${UrlEndPoints.forecast}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
-    );
-    return WeatherForecast.fromJson(response);
+    try {
+      final response = await _getJson(
+        "${UrlEndPoints.forecast}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
+      );
+      return WeatherForecast.fromJson(response);
+    } catch (e) {
+      return WeatherForecast.empty();
+    }
   }
 
   Future<dynamic> _getJson(String url) async {

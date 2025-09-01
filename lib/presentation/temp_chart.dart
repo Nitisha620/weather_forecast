@@ -2,6 +2,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_forcast/styles/app_text_style.dart';
+import 'package:weather_forcast/styles/app_theme.dart';
 import 'package:weather_forcast/utils/icon_util.dart';
 
 class TempChart extends StatefulWidget {
@@ -42,7 +43,7 @@ class _TempChartState extends State<TempChart> {
             tooltipMargin: 8,
             getTooltipItems: (touchedSpots) {
               return touchedSpots.map((touchedSpot) {
-                final textStyle = AppTextStyle.font14Manrope;
+                final textStyle = AppTextStyle.font14;
 
                 String label;
                 if (touchedSpot.barIndex == 0) {
@@ -79,7 +80,9 @@ class _TempChartState extends State<TempChart> {
                               widget.forecasetInfo[index]['date'].toString(),
                             ),
                           ),
-                          style: AppTextStyle.font12Grey,
+                          style: AppTextStyle.font12.copyWith(
+                            color: AppThemes.greyColor,
+                          ),
                         ),
                       ),
                       Icon(style.icon, color: style.color),

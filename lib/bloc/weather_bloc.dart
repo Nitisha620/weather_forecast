@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:equatable/equatable.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -16,10 +17,10 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
   WeatherRepository weatherRepository = WeatherRepository();
   final apiKey = dotenv.env['OPENWEATHER_API_KEY'];
 
-  WeatherBloc() : super(Initial()) {
+  WeatherBloc() : super(WeatherState()) {
     on<FetchWeatherData>(fetchWeatherData);
     on<ToggleMapLayer>((event, emit) {
-      emit(Loading());
+      emit(state.copyWith(isLoading: true, errorMessage: null));
       try {
         final overlay = TileOverlay(
           tileOverlayId: TileOverlayId(event.layer),
@@ -31,16 +32,21 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
           ),
         );
 
-        emit(WeatherMapState(overlays: {overlay}));
+        emit(state.copyWith(isLoading: false, overlays: {overlay}));
       } catch (e) {
-        emit(Error(message: "Error while fetching map layer data"));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            errorMessage: "Error while fetching map layer data",
+          ),
+        );
       }
     });
     on<SelectMarker>((event, emit) {
-      emit(MarkerSelected());
+      emit(state.copyWith(markerSelected: true));
     });
     on<DeselectMarker>((event, emit) {
-      emit(MarkerDeselected());
+      emit(state.copyWith(markerSelected: false));
     });
   }
 
@@ -49,12 +55,15 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
     Emitter<WeatherState> emit,
   ) async {
     try {
-      emit(Loading());
+      emit(state.copyWith(isLoading: true, errorMessage: null));
 
       final coordinates = await _getCoordinates(event.cityName);
 
       if (coordinates == null) {
-        emit(Error(message: "Unable to fetch location"));
+        emit(state.copyWith(
+          isLoading: false,
+          errorMessage: "Unable to fetch location",
+        ));
         return;
       }
 
@@ -70,15 +79,17 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
         (results[1] as WeatherForecast).list,
       );
       emit(
-        Loaded(
+        state.copyWith(
+          isLoading: false,
           currentWeather: currentWeather,
           weatherForecast: weatherForecast,
         ),
       );
     } catch (e) {
       emit(
-        Error(
-          message:
+        state.copyWith(
+          isLoading: false,
+          errorMessage:
               "Error while fetching weather data, please refresh or try again later",
         ),
       );

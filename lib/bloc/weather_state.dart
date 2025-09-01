@@ -1,32 +1,47 @@
 part of 'weather_bloc.dart';
 
-class WeatherState {}
-
-class Initial extends WeatherState {}
-
-class Loading extends WeatherState {}
-
-class Loaded extends WeatherState {
-  final CurrentWeather currentWeather;
+class WeatherState extends Equatable {
+  final bool isLoading;
+  final CurrentWeather? currentWeather;
   final List<Map<String, dynamic>> weatherForecast;
-  Loaded({required this.currentWeather, required this.weatherForecast});
-}
-
-class Error extends WeatherState {
-  String message;
-  Error({required this.message});
-}
-
-class WeatherMapState extends WeatherState {
   final Set<TileOverlay> overlays;
+  final bool markerSelected;
+  final String? errorMessage;
 
-  WeatherMapState({this.overlays = const {}});
+  const WeatherState({
+    this.isLoading = false,
+    this.currentWeather,
+    this.weatherForecast = const [],
+    this.overlays = const {},
+    this.markerSelected = false,
+    this.errorMessage,
+  });
 
-  WeatherMapState copyWith({Set<TileOverlay>? overlays}) {
-    return WeatherMapState(overlays: overlays ?? this.overlays);
+  WeatherState copyWith({
+    bool? isLoading,
+    CurrentWeather? currentWeather,
+    List<Map<String, dynamic>>? weatherForecast,
+    Set<TileOverlay>? overlays,
+    bool? markerSelected,
+    String? errorMessage,
+  }) {
+    return WeatherState(
+      isLoading: isLoading ?? this.isLoading,
+      currentWeather: currentWeather ?? this.currentWeather,
+      weatherForecast: weatherForecast ?? this.weatherForecast,
+      overlays: overlays ?? this.overlays,
+      markerSelected: markerSelected ?? this.markerSelected,
+      errorMessage: errorMessage,
+    );
   }
+
+  @override
+  List<Object?> get props => [
+    isLoading,
+    currentWeather,
+    weatherForecast,
+    overlays,
+    markerSelected,
+    errorMessage,
+  ];
 }
-
-class MarkerSelected extends WeatherState {}
-
-class MarkerDeselected extends WeatherState {}

@@ -5,18 +5,17 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:weather_forcast/bloc/weather_bloc.dart';
 import 'package:weather_forcast/models/current_weather.dart';
 import 'package:weather_forcast/styles/app_text_style.dart';
-import 'package:weather_forcast/styles/app_theme.dart';
 import 'package:weather_forcast/widgets/flutter_toast.dart';
 
-class WeatherMap extends StatefulWidget {
+class MapPage extends StatefulWidget {
   final CurrentWeather currentWeather;
-  const WeatherMap({required this.currentWeather, super.key});
+  const MapPage({required this.currentWeather, super.key});
 
   @override
-  State<WeatherMap> createState() => _WeatherMapState();
+  State<MapPage> createState() => _MapPageState();
 }
 
-class _WeatherMapState extends State<WeatherMap> {
+class _MapPageState extends State<MapPage> {
   final globalKey = GlobalKey<ScaffoldState>();
   WeatherBloc get weatherBloc => context.read<WeatherBloc>();
   Map<int, String> bottombarOptions = {0: "precipitation_new", 1: "temp_new"};
@@ -40,10 +39,10 @@ class _WeatherMapState extends State<WeatherMap> {
     Size size = MediaQuery.of(context).size;
     return BlocConsumer<WeatherBloc, WeatherState>(
       listener: (context, state) async {
-        if (state is Loading) {
+        if (state.isLoading) {
           showToast("Please wait, Loading...");
         }
-        if (state is Error) {
+        if (state.errorMessage?.isNotEmpty ?? false) {
           showToast("Some error occurred, please try again later");
         }
       },
@@ -71,9 +70,7 @@ class _WeatherMapState extends State<WeatherMap> {
                         ),
                       ),
                     },
-                    tileOverlays: state is WeatherMapState
-                        ? state.overlays
-                        : <TileOverlay>{},
+                    tileOverlays: state.overlays,
                     onTap: (_) {
                       weatherBloc.add(DeselectMarker());
                     },
@@ -113,7 +110,7 @@ class _WeatherMapState extends State<WeatherMap> {
                       ),
                     ),
                   ),
-                  state is MarkerSelected
+                  state.markerSelected
                       ? Positioned(
                           bottom: 10,
                           child: Container(
@@ -217,14 +214,7 @@ fieldWithLabel(Size size, String key, String value) {
         margin: const EdgeInsets.symmetric(horizontal: 45),
         child: const Text(":"),
       ),
-      Text(
-        value.trim(),
-        style: AppTextStyle.font15Grey.copyWith(
-          color: AppThemes.primaryColor,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
-      ),
+      Text(value.trim(), style: AppTextStyle.font15),
     ],
   );
 }
