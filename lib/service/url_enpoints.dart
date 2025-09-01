@@ -3,4 +3,5 @@ class UrlEndPoints {
   static const geo = "$baseUrl/geo/1.0/direct";
   static const currentWeather = "$baseUrl/data/2.5/weather";
   static const forecast = "$baseUrl/data/2.5/forecast";
+  static const weatherMap = "https://tile.openweathermap.org/map/";
 }
