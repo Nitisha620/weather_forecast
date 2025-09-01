@@ -60,10 +60,12 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
       final coordinates = await _getCoordinates(event.cityName);
 
       if (coordinates == null) {
-        emit(state.copyWith(
-          isLoading: false,
-          errorMessage: "Unable to fetch location",
-        ));
+        emit(
+          state.copyWith(
+            isLoading: false,
+            errorMessage: "Unable to fetch location",
+          ),
+        );
         return;
       }
 
@@ -74,13 +76,30 @@ class WeatherBloc extends Bloc<WeatherEvent, WeatherState> {
         weatherRepository.fetchWeatherForecast(lat, lon),
       ]);
 
-      final currentWeather = results[0] as CurrentWeather;
+      final currentWeather = results[0] != null
+          ? results[0] as CurrentWeather
+          : CurrentWeather.empty();
+      ;
       final weatherForecast = _processForecast(
-        (results[1] as WeatherForecast).list,
+        results[1] != null
+            ? (results[1] as WeatherForecast).list
+            : WeatherForecast.empty().list,
       );
+
+      // Adding error message if any or both the api gets failed
+      if (results[0] == null && results[1] == null) {
+        throw Exception();
+      }
+      final errorMsg = results[0] == null
+          ? "Error while fetching current weather Information"
+          : results[1] == null
+          ? "Error while fetching weather foreacast"
+          : "";
+
       emit(
         state.copyWith(
           isLoading: false,
+          errorMessage: errorMsg,
           currentWeather: currentWeather,
           weatherForecast: weatherForecast,
         ),

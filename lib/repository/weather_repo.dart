@@ -19,25 +19,28 @@ class WeatherRepository {
     return LocationList.fromJson(response).list.first;
   }
 
-  Future<CurrentWeather> fetchCurrentWeatherData(double lat, double lon) async {
+  Future<CurrentWeather?> fetchCurrentWeatherData(
+    double lat,
+    double lon,
+  ) async {
     try {
       final response = await _getJson(
         "${UrlEndPoints.currentWeather}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
       );
       return CurrentWeather.fromJson(response);
     } catch (e) {
-      return CurrentWeather.empty();
+      return null;
     }
   }
 
-  Future<WeatherForecast> fetchWeatherForecast(double lat, double lon) async {
+  Future<WeatherForecast?> fetchWeatherForecast(double lat, double lon) async {
     try {
       final response = await _getJson(
         "${UrlEndPoints.forecast}?lat=$lat&lon=$lon&appid=$apiKey&units=metric",
       );
       return WeatherForecast.fromJson(response);
     } catch (e) {
-      return WeatherForecast.empty();
+      return null;
     }
   }
 
