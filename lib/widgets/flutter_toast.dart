@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
+import 'package:weather_forcast/styles/app_theme.dart';
 
 void showToast(String message, {ToastGravity gravity = ToastGravity.BOTTOM}) {
   Fluttertoast.showToast(
@@ -7,8 +7,8 @@ void showToast(String message, {ToastGravity gravity = ToastGravity.BOTTOM}) {
     toastLength: Toast.LENGTH_LONG,
     gravity: gravity,
     timeInSecForIosWeb: 1,
-    backgroundColor: Colors.black87,
-    textColor: Colors.white,
+    backgroundColor: AppThemes.greyColor,
+    textColor: AppThemes.secondaryColor,
     fontSize: 14.0,
   );
 }
