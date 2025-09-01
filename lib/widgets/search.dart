@@ -30,11 +30,11 @@ class Search extends StatelessWidget {
         controller: controller,
         textInputAction: TextInputAction.search,
         textAlignVertical: TextAlignVertical.center,
-        style: AppTextStyle.font14Manrope,
+        style: AppTextStyle.font14,
         decoration: InputDecoration(
           filled: false,
           hintText: hintText ?? "Search",
-          hintStyle: AppTextStyle.font13,
+          hintStyle: AppTextStyle.font12,
           prefixIcon: const Icon(Icons.search, color: AppThemes.secondaryColor, size: 25),
           enabledBorder: OutlineInputBorder(
             borderSide: const BorderSide(
